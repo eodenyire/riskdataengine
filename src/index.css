@@ -6,21 +6,23 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-brand-50: #fef2f2;
-  --color-brand-100: #fee2e2;
-  --color-brand-200: #fecaca;
-  --color-brand-300: #fca5a5;
-  --color-brand-400: #f87171;
-  --color-brand-500: #A32323; /* Equity Maroon */
-  --color-brand-600: #8c1d1d;
-  --color-brand-700: #7f1d1d;
-  --color-brand-800: #6c1818;
-  --color-brand-900: #450a0a;
+  --color-brand-50: #fff1f2;
+  --color-brand-100: #ffe4e6;
+  --color-brand-200: #fecdd3;
+  --color-brand-300: #fda4af;
+  --color-brand-400: #fb7185;
+  --color-brand-500: #8B1D3C; /* Precision Equity Maroon */
+  --color-brand-600: #7d1a36;
+  --color-brand-700: #6a162d;
+  --color-brand-800: #581226;
+  --color-brand-900: #4a1021;
 
-  --color-surface-bg: #0F0F0F;
-  --color-surface-card: #1A1A1A;
-  --color-surface-inner: #222222;
-  --color-surface-line: #333333;
+  --color-accent-gold: #F8C300; /* Equity Gold */
+
+  --color-surface-bg: #0A0A0A;
+  --color-surface-card: #121212;
+  --color-surface-inner: #1A1A1A;
+  --color-surface-line: #262626;
 }
 
 @layer base {

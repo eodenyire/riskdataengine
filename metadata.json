@@ -1,6 +1,6 @@
 {
-  "name": "DBConvert Studio",
-  "description": "Multi-database copy, sync, and distribution suite for legacy, on-premise, and cloud systems.",
+  "name": "Equity Ingestion Engine",
+  "description": "Enterprise Risk Data Sync & Transformation Engine for Equity Group Holdings. Orchestrates Leg 1 (DB Sync) and Leg 2 (File Ingestion) pipelines.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

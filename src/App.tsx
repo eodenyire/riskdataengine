@@ -35,7 +35,10 @@ import {
   Plus,
   Trash2,
   Check,
-  AlertCircle
+  AlertCircle,
+  Pause,
+  CircleStop,
+  ScrollText
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -44,7 +47,7 @@ interface Job {
   id: string;
   name: string;
   type: string;
-  status: 'completed' | 'running' | 'queued' | 'failed';
+  status: 'completed' | 'running' | 'queued' | 'failed' | 'paused';
   source: string;
   target: string;
   progress: number;
@@ -127,23 +130,23 @@ const JobWizard = ({ isOpen, onClose, onCreated }: { isOpen: boolean, onClose: (
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-3 text-center">Engine Logic Selection</label>
+                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-3 text-center">Pipeline Architecture Selection</label>
                   <div className="grid grid-cols-2 gap-4">
                     <button 
                       onClick={() => setFormData({...formData, type: 'Database Ingestion'})}
-                      className={`p-6 rounded-3xl border transition-all text-left ${formData.type === 'Database Ingestion' ? 'border-brand-500 bg-brand-500/5' : 'border-surface-line bg-surface-bg/20 opacity-50'}`}
+                      className={`p-6 rounded-3xl border transition-all text-left group ${formData.type === 'Database Ingestion' ? 'border-brand-500 bg-brand-500/5' : 'border-surface-line bg-surface-bg/20 opacity-50 hover:opacity-100'}`}
                     >
-                      <Database className="w-6 h-6 mb-4 text-brand-500" />
-                      <p className="text-white font-bold text-sm">Database Sync (Leg 1)</p>
-                      <p className="text-[10px] text-slate-500 mt-1">DB Tables to Target Hub or Repository</p>
+                      <Database className={`w-6 h-6 mb-4 transition-colors ${formData.type === 'Database Ingestion' ? 'text-accent-gold' : 'text-slate-500'}`} />
+                      <p className="text-white font-bold text-sm tracking-tight">Leg 1: DB Sync</p>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Connect to any DB, query tables, transform, and write to target DBs or Files.</p>
                     </button>
                     <button 
                       onClick={() => setFormData({...formData, type: 'File Ingestion'})}
-                      className={`p-6 rounded-3xl border transition-all text-left ${formData.type === 'File Ingestion' ? 'border-brand-500 bg-brand-500/5' : 'border-surface-line bg-surface-bg/20 opacity-50'}`}
+                      className={`p-6 rounded-3xl border transition-all text-left group ${formData.type === 'File Ingestion' ? 'border-brand-500 bg-brand-500/5' : 'border-surface-line bg-surface-bg/20 opacity-50 hover:opacity-100'}`}
                     >
-                      <FileCode2 className="w-6 h-6 mb-4 text-brand-500" />
-                      <p className="text-white font-bold text-sm">File Ingestion (Leg 2)</p>
-                      <p className="text-[10px] text-slate-500 mt-1">External Data Formats to Inbound Hub</p>
+                      <FileCode2 className={`w-6 h-6 mb-4 transition-colors ${formData.type === 'File Ingestion' ? 'text-accent-gold' : 'text-slate-500'}`} />
+                      <p className="text-white font-bold text-sm tracking-tight">Leg 2: File Ingestion</p>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Ingest diverse file formats into databases or convert formats for distribution.</p>
                     </button>
                   </div>
                 </div>
@@ -223,13 +226,14 @@ const JobWizard = ({ isOpen, onClose, onCreated }: { isOpen: boolean, onClose: (
             {step === 4 && (
               <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                  <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-3 text-emerald-500">Multimodal Distribution Gateways</label>
+                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-3 text-emerald-500">Global Distribution Channels</label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { id: 'Email Group', icon: <Mail className="w-4 h-4" /> },
                       { id: 'OneDrive Remote', icon: <Cloud className="w-4 h-4" /> },
-                      { id: 'Local Download', icon: <Download className="w-4 h-4" /> },
-                      { id: 'Remote Folder (FTP)', icon: <ExternalLink className="w-4 h-4" /> }
+                      { id: 'Local File System', icon: <Download className="w-4 h-4" /> },
+                      { id: 'Remote Server (FTP/SSH)', icon: <ExternalLink className="w-4 h-4" /> },
+                      { id: 'Departmental Shared Folder', icon: <Server className="w-4 h-4" /> }
                     ].map(d => (
                       <button 
                         key={d.id}
@@ -295,12 +299,12 @@ const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
     <aside className="w-64 border-r border-surface-line bg-surface-bg flex flex-col h-screen fixed top-0 left-0 z-50">
       <div className="p-8 border-b border-surface-line flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
+          <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 border border-brand-400">
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-display font-black text-white tracking-widest leading-none">EQUITY</span>
-            <span className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest mt-1">Compliance</span>
+            <span className="text-sm font-display font-black text-white tracking-[0.2em] leading-none">EQUITY</span>
+            <span className="text-[9px] font-mono font-bold text-accent-gold uppercase tracking-[0.1em] mt-1.5">Risk & Compliance</span>
           </div>
         </div>
       </div>
@@ -388,12 +392,21 @@ const Header = () => {
   );
 };
 
-const JobCard = ({ job, onStart, ...props }: { job: Job, onStart: (id: string) => any, [key: string]: any }) => {
+const JobCard = ({ job, onStart, onRetry, onPause, onCancel, onViewLogs, ...props }: { 
+  job: Job, 
+  onStart: (id: string) => any, 
+  onRetry: (id: string) => any,
+  onPause: (id: string) => any,
+  onCancel: (id: string) => any,
+  onViewLogs: (id: string) => any,
+  [key: string]: any 
+}) => {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
       case 'running': return 'bg-brand-500/10 text-brand-500 border-brand-500/20';
       case 'failed': return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'paused': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
       default: return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
     }
   };
@@ -450,7 +463,41 @@ const JobCard = ({ job, onStart, ...props }: { job: Job, onStart: (id: string) =
            </span>
         )}
         {job.status === 'running' && (
-           <span className="text-[10px] font-extrabold text-brand-500 uppercase tracking-widest animate-pulse">Processing...</span>
+           <div className="flex items-center gap-3">
+             <span className="text-[10px] font-extrabold text-brand-500 uppercase tracking-widest animate-pulse">Processing...</span>
+             <div className="flex gap-1">
+               <button onClick={() => onPause(job.id)} title="Pause Sync" className="p-1 text-slate-500 hover:text-amber-500 transition-colors">
+                  <Pause className="w-3.5 h-3.5" />
+               </button>
+               <button onClick={() => onCancel(job.id)} title="Cancel Job" className="p-1 text-slate-500 hover:text-red-500 transition-colors">
+                  <CircleStop className="w-3.5 h-3.5" />
+               </button>
+             </div>
+           </div>
+        )}
+        {job.status === 'paused' && (
+           <button 
+             onClick={() => onStart(job.id)}
+             className="flex items-center gap-2 text-[10px] font-extrabold text-amber-500 uppercase tracking-widest hover:text-white transition-colors"
+           >
+             <Play className="w-3 h-3" /> Resume Sync
+           </button>
+        )}
+        {(job.status === 'completed' || job.status === 'failed') && (
+           <button 
+             onClick={() => onViewLogs(job.id)}
+             className="flex items-center gap-2 text-[10px] font-extrabold text-slate-500 hover:text-brand-500 uppercase tracking-widest transition-colors"
+           >
+             <ScrollText className="w-3 h-3" /> View Trace
+           </button>
+        )}
+        {job.status === 'failed' && (
+          <button 
+            onClick={() => onRetry(job.id)}
+            className="flex items-center gap-2 text-[10px] font-extrabold text-red-500 uppercase tracking-widest hover:text-white transition-colors animate-pulse"
+          >
+            <RotateCcw className="w-3 h-3" /> Retry Sync
+          </button>
         )}
       </div>
     </div>
@@ -462,6 +509,7 @@ export default function App() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const fetchJobs = async () => {
     try {
@@ -489,6 +537,38 @@ export default function App() {
     }
   };
 
+  const handleRetryJob = async (id: string) => {
+    try {
+      await fetch(`/api/jobs/${id}/retry`, { method: 'POST' });
+      fetchJobs();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handlePauseJob = async (id: string) => {
+    try {
+      await fetch(`/api/jobs/${id}/pause`, { method: 'POST' });
+      fetchJobs();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancelJob = async (id: string) => {
+    try {
+      await fetch(`/api/jobs/${id}/cancel`, { method: 'POST' });
+      fetchJobs();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleViewLogs = (id: string) => {
+    setActiveTab('logs');
+    // Simplified: Just switch to logs tab
+  };
+
   return (
     <div className="min-h-screen bg-surface-bg flex">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -508,8 +588,8 @@ export default function App() {
               >
                 <div className="flex justify-between items-end">
                   <div>
-                    <h2 className="text-3xl font-display font-extrabold text-white tracking-tight">Operation Command</h2>
-                    <p className="text-sm text-slate-500 font-medium">Real-time oversight of Risk Data Ingestion across the Group.</p>
+                    <h2 className="text-3xl font-display font-extrabold text-white tracking-tight">Group Risk Command</h2>
+                    <p className="text-sm text-slate-500 font-medium">Enterprise Data Orchestration for Equity Group Holdings Risk & Compliance.</p>
                   </div>
                   <button 
                     onClick={() => setIsWizardOpen(true)}
@@ -544,7 +624,15 @@ export default function App() {
                     </div>
                     <div className="grid sm:grid-cols-2 gap-6">
                       {jobs.map(job => (
-                        <JobCard key={job.id} job={job} onStart={handleStartJob} />
+                        <JobCard 
+                          key={job.id} 
+                          job={job} 
+                          onStart={handleStartJob} 
+                          onRetry={handleRetryJob}
+                          onPause={handlePauseJob}
+                          onCancel={handleCancelJob}
+                          onViewLogs={handleViewLogs}
+                        />
                       ))}
                     </div>
                   </div>
@@ -557,10 +645,10 @@ export default function App() {
                        <h3 className="text-xs font-extrabold text-white uppercase tracking-[0.3em] mb-6">Distribution Nodes</h3>
                        <div className="space-y-6">
                           {[
-                            { name: 'OneDrive Enterprise', usage: '82%', status: 'active' },
-                            { name: 'S3 Compliant Bucket', usage: '14%', status: 'active' },
-                            { name: 'Local Dept Folders', usage: '92%', status: 'warning' },
-                            { name: 'Email Group Sync', usage: 'Active', status: 'active' },
+                            { name: 'OneDrive (Enterprise)', usage: '82%', status: 'active' },
+                            { name: 'S3 Regulatory Vault', usage: '14%', status: 'active' },
+                            { name: 'Local Regional Folders', usage: '92%', status: 'warning' },
+                            { name: 'Risk Email Group Sync', usage: 'Active', status: 'active' },
                           ].map((node, i) => (
                             <div key={i} className="space-y-2">
                                <div className="flex justify-between items-center text-[11px] font-bold">
@@ -607,10 +695,22 @@ export default function App() {
                      <h2 className="text-3xl font-display font-extrabold text-white tracking-tight leading-none mb-4">Ingestion Registry</h2>
                      <p className="text-sm text-slate-500 font-medium leading-none">Comprehensive catalog of all data ingestion and transformation tasks.</p>
                    </div>
-                   <div className="flex gap-4">
-                      <button className="px-5 py-3 rounded-2xl bg-surface-card border border-surface-line text-xs font-bold text-slate-400 flex items-center gap-2">
-                        <Filter className="w-4 h-4" /> Filter By Status
-                      </button>
+                   <div className="flex gap-4 items-center">
+                      <div className="flex bg-surface-card border border-surface-line rounded-2xl p-1 gap-1">
+                         {['All', 'queued', 'running', 'completed', 'failed'].map((status) => (
+                           <button
+                             key={status}
+                             onClick={() => setStatusFilter(status)}
+                             className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                               statusFilter === status 
+                                 ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' 
+                                 : 'text-slate-500 hover:text-slate-300'
+                             }`}
+                           >
+                             {status}
+                           </button>
+                         ))}
+                      </div>
                       <button 
                         onClick={() => setIsWizardOpen(true)}
                         className="px-6 py-3 rounded-2xl bg-brand-500 text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-600 shadow-lg shadow-brand-500/20 flex items-center gap-3"
@@ -632,7 +732,9 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-surface-line/50">
-                      {jobs.map(job => (
+                      {jobs
+                        .filter(job => statusFilter === 'All' || job.status === statusFilter)
+                        .map(job => (
                         <tr key={job.id} className="hover:bg-white/5 transition-colors group">
                           <td className="px-8 py-6">
                             <p className="text-white font-bold text-sm mb-1">{job.name}</p>
@@ -669,6 +771,22 @@ export default function App() {
                                     <Download className="w-4 h-4" />
                                   </button>
                                 )}
+                                {job.status === 'failed' && (
+                                  <button 
+                                    onClick={() => handleRetryJob(job.id)}
+                                    title="Retry Failed Job" 
+                                    className="p-2 text-brand-500 hover:bg-brand-500/10 rounded-xl transition-all animate-pulse"
+                                  >
+                                    <RotateCcw className="w-4 h-4" />
+                                  </button>
+                                )}
+                                {job.status === 'running' && (
+                                  <>
+                                    <button onClick={() => handlePauseJob(job.id)} title="Pause Job" className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-xl transition-all"><Pause className="w-4 h-4" /></button>
+                                    <button onClick={() => handleCancelJob(job.id)} title="Cancel Job" className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all"><CircleStop className="w-4 h-4" /></button>
+                                  </>
+                                )}
+                                <button onClick={() => handleViewLogs(job.id)} title="View Logs" className="p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl transition-all"><ScrollText className="w-4 h-4" /></button>
                                 <button onClick={() => handleStartJob(job.id)} className="p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl transition-all"><Play className="w-4 h-4" /></button>
                                 <button className="p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl transition-all"><RotateCcw className="w-4 h-4" /></button>
                                 <button className="p-2 text-slate-500 hover:text-brand-500 hover:bg-brand-500/10 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>

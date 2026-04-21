@@ -33,6 +33,16 @@ async function startServer() {
       target: "PostgreSQL",
       progress: 65,
       timestamp: new Date().toISOString()
+    },
+    {
+      id: "J-003",
+      name: "Legacy Mainframe Export",
+      type: "Database Ingestion",
+      status: "failed",
+      source: "IBM DB2",
+      target: "S3 Bucket",
+      progress: 14,
+      timestamp: new Date().toISOString()
     }
   ];
 
@@ -62,27 +72,24 @@ async function startServer() {
       const isLeg1 = job.type === 'Database Ingestion';
       
       const simulationLogs = isLeg1 ? [
-        "BOOTSTRAP: Initializing Leg 1 Database Sync...",
-        "CONNECT: Persistent tunnel established with source DB nodes.",
-        "QUERY: Executing complex risk-parameters extraction...",
-        "TRANSFORM: Applying 'PII Masking' & 'Data Cleaning' logic...",
-        "VALIDATE: Schema integrity check passed for 4.2M rows.",
-        "INGEST: Parallel multi-threaded write to destination repository...",
-        "CONVERT: Generating distribution artifacts (Excel/JSON formats)...",
-        "DISTRIBUTE: Dispatching to Email Group 'Risk-Mgt-Daily'...",
-        "SYNC: Backup pushed to OneDrive://Compliance/Internal/Vault",
-        "FINALIZE: Compliance audit trail signed and sealed."
+        "DB_CONN: Connecting to Equity Source Oracle Cluster...",
+        "QUERY_TABLES: Extracting Risk Tables [TRAN_MASTER, COL_VAL]...",
+        "TRANSFORM_CLEAN: Cleaning data and applying Equity Transformation Schema...",
+        "DB_WRITE: Committing to Global Risk Vault (SQL Server)...",
+        "FORMAT_EXPORT: Generating regulatory EXCEL and XML formats...",
+        "DISTRIBUTE_EMAIL: Sharing artifacts with Risk Compliance Email Group...",
+        "ONEDRIVE_SYNC: Persisting audit trail to Enterprise OneDrive...",
+        "LOCAL_SAVE: Archiving copy to Regional Support folders...",
+        "FINALIZE: Audit trail verification complete for Equity Group."
       ] : [
-        "BOOTSTRAP: Initializing Leg 2 File Ingestion...",
-        "FETCH: Extracting raw files from remote SFTP/Local hubs...",
-        "SCAN: Anti-virus and malware scanning of incoming artifacts...",
-        "PARSE: Converting raw XML/CSV into structured ingestion stream...",
-        "CLEAN: Sanitizing invalid records and null-pointers...",
-        "MAP: Mapping source fields to target relational schema...",
-        "WRITE: Committing transformed records to Production DB vault...",
-        "CONVERT: Saving localized copies for departmental archives...",
-        "DISTRIBUTE: Artifacts shared on Enterprise Remote Folders...",
-        "FINALIZE: Job artifacts prepared for regulatory inspection."
+        "FILE_FETCH: Monitoring Leg 2 Inbound Folders...",
+        "FILE_EXTRACT: Parsing multiple risk file formats (CSV, XML, JSON)...",
+        "INGEST_TRANSFORM: Cleaning file records and normalizing for DB ingestion...",
+        "DB_COMMIT: Ingesting to Equity Risk Repository (PostgreSQL)...",
+        "FORMAT_CONV: Converting source formats to enterprise standards...",
+        "DISTRIBUTE_REMOTE: Sharing to remote departmental SFTP servers...",
+        "EMAIL_NOTIFY: Alerting Risk Managers via Compliance Groups...",
+        "FINALIZE: Ingestion lifecycle complete."
       ];
 
       // Simulate progress and logs
@@ -99,6 +106,80 @@ async function startServer() {
         }
       }, 1200);
       
+      res.json(job);
+    } else {
+      res.status(404).json({ error: "Job not found" });
+    }
+  });
+
+  app.post("/api/jobs/:id/retry", (req, res) => {
+    const job = jobs.find(j => j.id === req.params.id);
+    if (job) {
+      job.status = "queued";
+      job.progress = 0;
+      
+      // Wait 2 seconds in queued state before starting automatically
+      setTimeout(() => {
+        if (job.status === 'queued') {
+          // Trigger the 'start' logic
+          job.status = "running";
+          const isLeg1 = job.type === 'Database Ingestion';
+          const simulationLogs = isLeg1 ? [
+            "DB_CONN: Connecting to Equity Source Oracle Cluster...",
+            "QUERY_TABLES: Extracting Risk Tables [TRAN_MASTER, COL_VAL]...",
+            "TRANSFORM_CLEAN: Cleaning data and applying Equity Transformation Schema...",
+            "DB_WRITE: Committing to Global Risk Vault (SQL Server)...",
+            "FORMAT_EXPORT: Generating regulatory EXCEL and XML formats...",
+            "DISTRIBUTE_EMAIL: Sharing artifacts with Risk Compliance Email Group...",
+            "ONEDRIVE_SYNC: Persisting audit trail to Enterprise OneDrive...",
+            "LOCAL_SAVE: Archiving copy to Regional Support folders...",
+            "FINALIZE: Audit trail verification complete for Equity Group."
+          ] : [
+            "FILE_FETCH: Monitoring Leg 2 Inbound Folders...",
+            "FILE_EXTRACT: Parsing multiple risk file formats (CSV, XML, JSON)...",
+            "INGEST_TRANSFORM: Cleaning file records and normalizing for DB ingestion...",
+            "DB_COMMIT: Ingesting to Equity Risk Repository (PostgreSQL)...",
+            "FORMAT_CONV: Converting source formats to enterprise standards...",
+            "DISTRIBUTE_REMOTE: Sharing to remote departmental SFTP servers...",
+            "EMAIL_NOTIFY: Alerting Risk Managers via Compliance Groups...",
+            "FINALIZE: Ingestion lifecycle complete."
+          ];
+
+          let step = 0;
+          const interval = setInterval(() => {
+            job.progress = (step + 1) * 10;
+            console.log(`[RETRY_${job.id}] ${simulationLogs[step]}`);
+            step++;
+            if (step >= simulationLogs.length) {
+              job.status = "completed";
+              job.progress = 100;
+              clearInterval(interval);
+            }
+          }, 1200);
+        }
+      }, 2000);
+      
+      res.json(job);
+    } else {
+      res.status(404).json({ error: "Job not found" });
+    }
+  });
+
+  app.post("/api/jobs/:id/pause", (req, res) => {
+    const job = jobs.find(j => j.id === req.params.id);
+    if (job) {
+      job.status = "paused";
+      res.json(job);
+    } else {
+      res.status(404).json({ error: "Job not found" });
+    }
+  });
+
+  app.post("/api/jobs/:id/cancel", (req, res) => {
+    const job = jobs.find(j => j.id === req.params.id);
+    if (job) {
+      job.status = "failed";
+      job.progress = 0;
       res.json(job);
     } else {
       res.status(404).json({ error: "Job not found" });
