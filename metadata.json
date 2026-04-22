@@ -1,6 +1,6 @@
 {
   "name": "Equity Ingestion Engine",
-  "description": "Enterprise Risk Data Sync & Transformation Engine for Equity Group Holdings. Orchestrates Leg 1 (DB Sync) and Leg 2 (File Ingestion) pipelines.",
+  "description": "Enterprise Risk Data Sync & Transformation Engine for Equity Group Holdings. Orchestrates DB Sync and File Convert pipelines.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

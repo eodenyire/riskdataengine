@@ -14,48 +14,84 @@ async function startServer() {
 
   // Mock DB for Ingestion Jobs
   let jobs = [
+    // ... existing jobs (I'll keep them but I need to make sure I don't break the existing code)
     {
       id: "J-001",
       name: "Daily Transaction Sync",
-      type: "Database Ingestion",
+      type: "Database Migration",
+      scenario: "sync",
       status: "completed",
       source: "Oracle DB",
       target: "SQL Server",
       progress: 100,
+      threads: 8,
       timestamp: new Date().toISOString()
     },
     {
       id: "J-002",
-      name: "Quarterly Risk Assessment",
-      type: "File Processing",
+      name: "Risk Data Normalization",
+      type: "File Conversion",
+      scenario: "convert",
       status: "running",
-      source: "Excel (Local)",
+      source: "Excel (S3)",
       target: "PostgreSQL",
       progress: 65,
+      threads: 4,
       timestamp: new Date().toISOString()
     },
     {
       id: "J-003",
-      name: "Legacy Mainframe Export",
-      type: "Database Ingestion",
+      name: "Archive Legacy Records",
+      type: "Database Migration",
+      scenario: "copy",
       status: "failed",
       source: "IBM DB2",
       target: "S3 Bucket",
       progress: 14,
+      threads: 16,
       timestamp: new Date().toISOString()
     }
   ];
 
+  let connections = [
+    { id: "C-001", name: "Oracle Core Mainframe", type: "Oracle", host: "10.0.1.42", port: "1521", username: "sys_admin", status: "Online" },
+    { id: "C-002", name: "SQLServer Compliance UAT", type: "SQL Server", host: "uat-sql.equity.internal", port: "1433", username: "compliance_svc", status: "Online" },
+    { id: "C-003", name: "PostgreSQL Risk Analytics", type: "PostgreSQL", host: "pg-risk.cloud.equity", port: "5432", username: "analyst_core", status: "Standby" }
+  ];
+
   // API Routes
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   app.get("/api/jobs", (req, res) => {
     res.json(jobs);
+  });
+
+  app.get("/api/connections", (req, res) => {
+    res.json(connections);
+  });
+
+  app.post("/api/connections", (req, res) => {
+    const newConn = {
+      id: `C-00${connections.length + 1}`,
+      ...req.body,
+      status: "Online"
+    };
+    connections.push(newConn);
+    res.status(201).json(newConn);
+  });
+
+  app.delete("/api/connections/:id", (req, res) => {
+    connections = connections.filter(c => c.id !== req.params.id);
+    res.status(204).send();
   });
 
   app.post("/api/jobs", (req, res) => {
     const newJob = {
       id: `J-00${jobs.length + 1}`,
       ...req.body,
-      status: "queued",
+      status: req.body.isScheduled ? "scheduled" : "queued",
       progress: 0,
       timestamp: new Date().toISOString()
     };
@@ -69,27 +105,25 @@ async function startServer() {
       job.status = "running";
       job.progress = 0;
       
-      const isLeg1 = job.type === 'Database Ingestion';
+      const isConvert = job.scenario === 'convert';
       
-      const simulationLogs = isLeg1 ? [
-        "DB_CONN: Connecting to Equity Source Oracle Cluster...",
-        "QUERY_TABLES: Extracting Risk Tables [TRAN_MASTER, COL_VAL]...",
-        "TRANSFORM_CLEAN: Cleaning data and applying Equity Transformation Schema...",
-        "DB_WRITE: Committing to Global Risk Vault (SQL Server)...",
-        "FORMAT_EXPORT: Generating regulatory EXCEL and XML formats...",
-        "DISTRIBUTE_EMAIL: Sharing artifacts with Risk Compliance Email Group...",
-        "ONEDRIVE_SYNC: Persisting audit trail to Enterprise OneDrive...",
-        "LOCAL_SAVE: Archiving copy to Regional Support folders...",
-        "FINALIZE: Audit trail verification complete for Equity Group."
+      const simulationLogs = !isConvert ? [
+        "SETUP: Initializing Scenario: " + job.scenario.toUpperCase(),
+        "CONNECT: Establishing connection to source node " + job.source + "...",
+        "WORKFLOW: Parallel threads (x" + job.threads + ") engaged for data extraction...",
+        "CONTROL: Applying SQL filters and type mapping rules...",
+        "EXECUTION: Moving records from " + job.source + " to " + job.target + "...",
+        "SYNC_CHECK: Running bidirectional delta verification...",
+        "DISPATCH: Fan-out distribution to enterprise nodes...",
+        "FINALIZE: Job " + job.id + " completed and saved as repeatable task."
       ] : [
-        "FILE_FETCH: Monitoring Leg 2 Inbound Folders...",
-        "FILE_EXTRACT: Parsing multiple risk file formats (CSV, XML, JSON)...",
-        "INGEST_TRANSFORM: Cleaning file records and normalizing for DB ingestion...",
-        "DB_COMMIT: Ingesting to Equity Risk Repository (PostgreSQL)...",
-        "FORMAT_CONV: Converting source formats to enterprise standards...",
-        "DISTRIBUTE_REMOTE: Sharing to remote departmental SFTP servers...",
-        "EMAIL_NOTIFY: Alerting Risk Managers via Compliance Groups...",
-        "FINALIZE: Ingestion lifecycle complete."
+        "CONVERT_INIT: Monitoring input stream from " + job.source + "...",
+        "PARSE: Parsing file formats into internal metadata representation...",
+        "TRANSFORM: Executing PII masking and normalization scripts...",
+        "OUTPUT: Generating output in " + ((job as any).outputFormat || 'JSON') + " compliance format...",
+        "DISTRIBUTE: Sending results to Group Emails and Local Folders...",
+        "VERIFY: Consistency check passed for conversion ingestion.",
+        "LOG: Trace archived to system audit trail."
       ];
 
       // Simulate progress and logs
@@ -123,26 +157,23 @@ async function startServer() {
         if (job.status === 'queued') {
           // Trigger the 'start' logic
           job.status = "running";
-          const isLeg1 = job.type === 'Database Ingestion';
-          const simulationLogs = isLeg1 ? [
-            "DB_CONN: Connecting to Equity Source Oracle Cluster...",
-            "QUERY_TABLES: Extracting Risk Tables [TRAN_MASTER, COL_VAL]...",
-            "TRANSFORM_CLEAN: Cleaning data and applying Equity Transformation Schema...",
-            "DB_WRITE: Committing to Global Risk Vault (SQL Server)...",
-            "FORMAT_EXPORT: Generating regulatory EXCEL and XML formats...",
-            "DISTRIBUTE_EMAIL: Sharing artifacts with Risk Compliance Email Group...",
-            "ONEDRIVE_SYNC: Persisting audit trail to Enterprise OneDrive...",
-            "LOCAL_SAVE: Archiving copy to Regional Support folders...",
-            "FINALIZE: Audit trail verification complete for Equity Group."
+          
+          const isConvert = job.scenario === 'convert';
+          
+          const simulationLogs = !isConvert ? [
+            "RETRY_SETUP: Initializing Scenario: " + job.scenario.toUpperCase(),
+            "RETRY_CONNECT: Establishing connection...",
+            "RETRY_WORKFLOW: Re-engaging " + job.threads + " parallel threads...",
+            "RETRY_CONTROL: Applying filters...",
+            "RETRY_EXECUTION: Resuming data move...",
+            "RETRY_SYNC: Verifying integrity...",
+            "RETRY_FINALIZE: Retry successful."
           ] : [
-            "FILE_FETCH: Monitoring Leg 2 Inbound Folders...",
-            "FILE_EXTRACT: Parsing multiple risk file formats (CSV, XML, JSON)...",
-            "INGEST_TRANSFORM: Cleaning file records and normalizing for DB ingestion...",
-            "DB_COMMIT: Ingesting to Equity Risk Repository (PostgreSQL)...",
-            "FORMAT_CONV: Converting source formats to enterprise standards...",
-            "DISTRIBUTE_REMOTE: Sharing to remote departmental SFTP servers...",
-            "EMAIL_NOTIFY: Alerting Risk Managers via Compliance Groups...",
-            "FINALIZE: Ingestion lifecycle complete."
+            "RETRY_CONVERT: Re-monitoring input stream...",
+            "RETRY_PARSE: Re-parsing metadata...",
+            "RETRY_TRANSFORM: Clearing transformation cache...",
+            "RETRY_OUTPUT: Generating new output format...",
+            "RETRY_FINALIZE: Conversion retry complete."
           ];
 
           let step = 0;

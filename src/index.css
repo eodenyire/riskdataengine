@@ -19,21 +19,21 @@
 
   --color-accent-gold: #F8C300; /* Equity Gold */
 
-  --color-surface-bg: #0A0A0A;
-  --color-surface-card: #121212;
-  --color-surface-inner: #1A1A1A;
-  --color-surface-line: #262626;
+  --color-surface-bg: #F3F4F6;
+  --color-surface-card: #FFFFFF;
+  --color-surface-inner: #F9FAFB;
+  --color-surface-line: #E5E7EB;
 }
 
 @layer base {
   body {
-    @apply font-sans bg-surface-bg text-slate-200 antialiased;
+    @apply font-sans bg-surface-bg text-slate-900 antialiased;
   }
 }
 
 .tech-grid {
   background-image: 
-    linear-gradient(to right, rgba(163, 35, 35, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(163, 35, 35, 0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(to right, rgba(139, 29, 60, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 29, 60, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
