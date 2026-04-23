@@ -25,7 +25,8 @@ async function startServer() {
       target: "SQL Server",
       progress: 100,
       threads: 8,
-      timestamp: new Date().toISOString()
+      timestamp: new Date(Date.now() - 86400000).toISOString(),
+      completedAt: new Date(Date.now() - 86340000).toISOString()
     },
     {
       id: "J-002",
@@ -36,6 +37,10 @@ async function startServer() {
       source: "Excel (S3)",
       target: "PostgreSQL",
       progress: 65,
+      recordsProcessed: 812500,
+      totalRecords: 1250000,
+      dataVolume: "3.24 GB",
+      estimatedTimeRemaining: "4.5m",
       threads: 4,
       timestamp: new Date().toISOString()
     },
@@ -99,6 +104,21 @@ async function startServer() {
     res.status(201).json(newJob);
   });
 
+  app.delete("/api/jobs/:id", (req, res) => {
+    jobs = jobs.filter(j => j.id !== req.params.id);
+    res.status(204).send();
+  });
+
+  app.patch("/api/jobs/:id", (req, res) => {
+    const index = jobs.findIndex(j => j.id === req.params.id);
+    if (index !== -1) {
+      jobs[index] = { ...jobs[index], ...req.body };
+      res.json(jobs[index]);
+    } else {
+      res.status(404).send("Job not found");
+    }
+  });
+
   app.post("/api/jobs/:id/start", (req, res) => {
     const job = jobs.find(j => j.id === req.params.id);
     if (job) {
@@ -129,16 +149,31 @@ async function startServer() {
       // Simulate progress and logs
       let step = 0;
       const interval = setInterval(() => {
-        job.progress = (step + 1) * 10;
-        console.log(`[ENGINE_${job.id}] ${simulationLogs[step]}`);
+        const currentJob = jobs.find(j => j.id === job.id);
+        if (!currentJob || currentJob.status !== 'running') {
+          clearInterval(interval);
+          return;
+        }
+
+        currentJob.progress = Math.min(100, (step + 1) * (100 / simulationLogs.length));
+        
+        // Granular Updates
+        const total = 1250000;
+        (currentJob as any).recordsProcessed = Math.floor((currentJob.progress / 100) * total);
+        (currentJob as any).totalRecords = total;
+        (currentJob as any).dataVolume = ((currentJob.progress / 100) * 5.4).toFixed(2) + " GB";
+        (currentJob as any).estimatedTimeRemaining = Math.max(0, (simulationLogs.length - step - 1) * 1.2).toFixed(1) + "m";
+
+        console.log(`[ENGINE_${currentJob.id}] ${simulationLogs[step]}`);
         
         step++;
         if (step >= simulationLogs.length) {
-          job.status = "completed";
-          job.progress = 100;
+          currentJob.status = "completed";
+          currentJob.progress = 100;
+          currentJob.completedAt = new Date().toISOString();
           clearInterval(interval);
         }
-      }, 1200);
+      }, 1500);
       
       res.json(job);
     } else {
